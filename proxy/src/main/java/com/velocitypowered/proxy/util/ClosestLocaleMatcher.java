@@ -19,9 +19,22 @@ package com.velocitypowered.proxy.util;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.translation.GlobalTranslator;
+
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.translation.GlobalTranslator;
 
 /**
  * Matches a player's locale to the "closest" Velocity locale, for message localization.
@@ -57,5 +70,44 @@ public class ClosestLocaleMatcher {
 
   public Locale lookupClosest(final Locale locale) {
     return closest.get(locale);
+  }
+
+  public static Component translateAndParse(String key, Object... arguments) {
+    return translateAndParse(key, null, arguments);
+  }
+
+  public static Component translateAndParse(String key, Locale locale, Object... arguments) {
+    return translateAndParse(key, locale, NamedTextColor.WHITE, arguments);
+  }
+
+  /**
+   * Translate and parse with MiniMessage an translation.
+   * @param key the translation key
+   * @param locale the locale
+   * @param color the color to set if the resulting component does not have color
+   * @param arguments the arguments
+   * @return the translation parsed
+   */
+  public static Component translateAndParse(String key, Locale locale, TextColor color, Object... arguments) {
+    return MiniMessage.miniMessage()
+      .deserialize(GlobalTranslator.translator()
+        .translate(key, INSTANCE.lookupClosest(locale == null
+          ? Locale.getDefault()
+          : locale
+        ))
+        .format(format(arguments), new StringBuffer(), null).toString())
+      .colorIfAbsent(color);
+  }
+
+  private static final Object[] format(Object... arguments) {
+    if (arguments == null || arguments.length == 0) {
+      return arguments;
+    }
+    for (int i = 0; i < arguments.length; i++) {
+      if (arguments[i] instanceof Component) {
+        arguments[i] = MiniMessage.miniMessage().serialize((Component)arguments[i]);
+      }
+    }
+    return arguments;
   }
 }
