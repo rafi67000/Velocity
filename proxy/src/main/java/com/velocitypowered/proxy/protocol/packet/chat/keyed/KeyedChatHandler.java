@@ -19,13 +19,11 @@ package com.velocitypowered.proxy.protocol.packet.chat.keyed;
 
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
-import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.proxy.VelocityServer;
 import com.velocitypowered.proxy.connection.client.ConnectedPlayer;
 import com.velocitypowered.proxy.protocol.MinecraftPacket;
 import com.velocitypowered.proxy.protocol.packet.chat.ChatQueue;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 import net.kyori.adventure.text.Component;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -72,12 +70,13 @@ public class KeyedChatHandler implements
     CompletableFuture<PlayerChatEvent> future = eventManager.fire(toSend);
 
     CompletableFuture<MinecraftPacket> chatFuture;
-    IdentifiedKey playerKey = this.player.getIdentifiedKey();
-
-    if (playerKey != null && !packet.isUnsigned()) {
-      // 1.19->1.19.2 signed version
-      chatFuture = future.thenApply(handleOldSignedChat(packet));
-    } else {
+// fuck you all ~ rafi
+//    IdentifiedKey playerKey = this.player.getIdentifiedKey();
+//
+//    if (playerKey != null && !packet.isUnsigned()) {
+//      // 1.19->1.19.2 signed version
+//      chatFuture = future.thenApply(handleOldSignedChat(packet));
+//    } else {
       // 1.19->1.19.2 unsigned version
       chatFuture = future.thenApply(pme -> {
         PlayerChatEvent.ChatResult chatResult = pme.getResult();
@@ -89,7 +88,7 @@ public class KeyedChatHandler implements
             .message(chatResult.getMessage().orElse(packet.getMessage()))
             .setTimestamp(packet.getExpiry()).toServer();
       });
-    }
+//    }
     chatQueue.queuePacket(
         chatFuture.exceptionally((ex) -> {
           logger.error("Exception while handling player chat for {}", player, ex);
@@ -99,32 +98,32 @@ public class KeyedChatHandler implements
     );
   }
 
-  private Function<PlayerChatEvent, MinecraftPacket> handleOldSignedChat(KeyedPlayerChatPacket packet) {
-    IdentifiedKey playerKey = this.player.getIdentifiedKey();
-    assert playerKey != null;
-    return pme -> {
-      PlayerChatEvent.ChatResult chatResult = pme.getResult();
-      if (!chatResult.isAllowed()) {
-        if (playerKey.getKeyRevision().noLessThan(IdentifiedKey.Revision.LINKED_V2)) {
-          // Bad, very bad.
-          invalidCancel(logger, player);
-        }
-        return null;
-      }
-
-      if (chatResult.getMessage().map(str -> !str.equals(packet.getMessage())).orElse(false)) {
-        if (playerKey.getKeyRevision().noLessThan(IdentifiedKey.Revision.LINKED_V2)) {
-          // Bad, very bad.
-          invalidChange(logger, player);
-        } else {
-          logger.warn("A plugin changed a signed chat message. The server may not accept it.");
-          return player.getChatBuilderFactory().builder()
-              .message(chatResult.getMessage().get() /* always present at this point */)
-              .setTimestamp(packet.getExpiry())
-              .toServer();
-        }
-      }
-      return packet;
-    };
-  }
+//  private Function<PlayerChatEvent, MinecraftPacket> handleOldSignedChat(KeyedPlayerChatPacket packet) {
+//    IdentifiedKey playerKey = this.player.getIdentifiedKey();
+//    assert playerKey != null;
+//    return pme -> {
+//      PlayerChatEvent.ChatResult chatResult = pme.getResult();
+//      if (!chatResult.isAllowed()) {
+//        if (playerKey.getKeyRevision().noLessThan(IdentifiedKey.Revision.LINKED_V2)) {
+//          // Bad, very bad.
+//          invalidCancel(logger, player);
+//        }
+//        return null;
+//      }
+//
+//      if (chatResult.getMessage().map(str -> !str.equals(packet.getMessage())).orElse(false)) {
+//        if (/*playerKey.getKeyRevision().noLessThan(IdentifiedKey.Revision.LINKED_V2)*/ false) {
+//          // Bad, very bad.
+//          invalidChange(logger, player);
+//        } else {
+////          logger.warn("A plugin changed a signed chat message. The server may not accept it.");
+//          return player.getChatBuilderFactory().builder()
+//              .message(chatResult.getMessage().get() /* always present at this point */)
+//              .setTimestamp(packet.getExpiry())
+//              .toServer();
+//        }
+//      }
+//      return packet;
+//    };
+//  }
 }

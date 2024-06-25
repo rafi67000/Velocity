@@ -17,9 +17,6 @@
 
 package com.velocitypowered.proxy.protocol.packet.chat.session;
 
-import static com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedChatHandler.invalidCancel;
-import static com.velocitypowered.proxy.protocol.packet.chat.keyed.KeyedChatHandler.invalidChange;
-
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.proxy.VelocityServer;
@@ -31,54 +28,54 @@ import org.apache.logging.log4j.Logger;
 
 public class SessionChatHandler implements ChatHandler<SessionPlayerChatPacket> {
 
-  private static final Logger logger = LogManager.getLogger(SessionChatHandler.class);
+    private static final Logger logger = LogManager.getLogger(SessionChatHandler.class);
 
-  private final ConnectedPlayer player;
-  private final VelocityServer server;
+    private final ConnectedPlayer player;
+    private final VelocityServer server;
 
-  public SessionChatHandler(ConnectedPlayer player, VelocityServer server) {
-    this.player = player;
-    this.server = server;
-  }
+    public SessionChatHandler(ConnectedPlayer player, VelocityServer server) {
+        this.player = player;
+        this.server = server;
+    }
 
-  @Override
-  public Class<SessionPlayerChatPacket> packetClass() {
-    return SessionPlayerChatPacket.class;
-  }
+    @Override
+    public Class<SessionPlayerChatPacket> packetClass() {
+        return SessionPlayerChatPacket.class;
+    }
 
-  @Override
-  public void handlePlayerChatInternal(SessionPlayerChatPacket packet) {
-    ChatQueue chatQueue = this.player.getChatQueue();
-    EventManager eventManager = this.server.getEventManager();
-    PlayerChatEvent toSend = new PlayerChatEvent(player, packet.getMessage());
-    chatQueue.queuePacket(
-        eventManager.fire(toSend)
-            .thenApply(pme -> {
-              PlayerChatEvent.ChatResult chatResult = pme.getResult();
-              if (!chatResult.isAllowed()) {
-                if (packet.isSigned()) {
-                  invalidCancel(logger, player);
-                }
-                return null;
-              }
+    @Override
+    public void handlePlayerChatInternal(SessionPlayerChatPacket packet) {
+        ChatQueue chatQueue = this.player.getChatQueue();
+        EventManager eventManager = this.server.getEventManager();
+        PlayerChatEvent toSend = new PlayerChatEvent(player, packet.getMessage());
+        chatQueue.queuePacket(
+                eventManager.fire(toSend)
+                        .thenApply(pme -> {
+                            PlayerChatEvent.ChatResult chatResult = pme.getResult();
+                            if (!chatResult.isAllowed()) {
+//                if (packet.isSigned()) {
+//                  invalidCancel(logger, player);
+//                }
+                                return null;
+                            }
 
-              if (chatResult.getMessage().map(str -> !str.equals(packet.getMessage()))
-                  .orElse(false)) {
-                if (packet.isSigned()) {
-                  invalidChange(logger, player);
-                  return null;
-                }
-                return this.player.getChatBuilderFactory().builder().message(packet.message)
-                    .setTimestamp(packet.timestamp)
-                    .toServer();
-              }
-              return packet;
-            })
-            .exceptionally((ex) -> {
-              logger.error("Exception while handling player chat for {}", player, ex);
-              return null;
-            }),
-        packet.getTimestamp()
-    );
-  }
+                            if (chatResult.getMessage().map(str -> !str.equals(packet.getMessage()))
+                                    .orElse(false)) {
+//                if (packet.isSigned()) {
+//                  invalidChange(logger, player);
+//                  return null;
+//                }
+                                return this.player.getChatBuilderFactory().builder().message(chatResult.getMessage().get())
+                                        .setTimestamp(packet.timestamp)
+                                        .toServer();
+                            }
+                            return packet;
+                        })
+                        .exceptionally((ex) -> {
+                            logger.error("Exception while handling player chat for {}", player, ex);
+                            return null;
+                        }),
+                packet.getTimestamp()
+        );
+    }
 }
