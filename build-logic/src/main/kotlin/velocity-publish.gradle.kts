@@ -5,14 +5,13 @@ plugins {
 
 extensions.configure<PublishingExtension> {
     repositories {
-        maven {
+        maven("https://repo.rafi67000.xyz/nononitas/") {
             credentials(PasswordCredentials::class.java)
+            authentication {
+                create<BasicAuthentication>("basic")
+            }
 
-            name = "paper"
-            val base = "https://repo.papermc.io/repository/maven"
-            val releasesRepoUrl = "$base-releases/"
-            val snapshotsRepoUrl = "$base-snapshots/"
-            setUrl(if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl)
+            name = "nononitas"
         }
     }
     publications {

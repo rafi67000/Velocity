@@ -90,11 +90,12 @@ public class KeyedChatHandler implements
       });
 //    }
     chatQueue.queuePacket(
-        chatFuture.exceptionally((ex) -> {
+        newLastSeen -> chatFuture.exceptionally((ex) -> {
           logger.error("Exception while handling player chat for {}", player, ex);
           return null;
         }),
-        packet.getExpiry()
+        packet.getExpiry(),
+        null
     );
   }
 
