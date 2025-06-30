@@ -52,21 +52,21 @@ import java.util.function.Supplier;
  */
 public enum TransportType {
   NIO("NIO", NioServerSocketChannel::new,
-          NioSocketChannel::new,
-          NioDatagramChannel::new,
-          NioIoHandler::newFactory),
+      NioSocketChannel::new,
+      NioDatagramChannel::new,
+      NioIoHandler::newFactory),
   EPOLL("epoll", EpollServerSocketChannel::new,
-          EpollSocketChannel::new,
-          EpollDatagramChannel::new,
-          EpollIoHandler::newFactory),
+      EpollSocketChannel::new,
+      EpollDatagramChannel::new,
+      EpollIoHandler::newFactory),
   KQUEUE("kqueue", KQueueServerSocketChannel::new,
-          KQueueSocketChannel::new,
-          KQueueDatagramChannel::new,
-          KQueueIoHandler::newFactory),
+      KQueueSocketChannel::new,
+      KQueueDatagramChannel::new,
+      KQueueIoHandler::newFactory),
   IO_URING("io_uring", IoUringServerSocketChannel::new,
-          IoUringSocketChannel::new,
-          IoUringDatagramChannel::new,
-          IoUringIoHandler::newFactory);
+      IoUringSocketChannel::new,
+      IoUringDatagramChannel::new,
+      IoUringIoHandler::newFactory);
 
   final String name;
   final ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory;
@@ -75,10 +75,10 @@ public enum TransportType {
   final Supplier<IoHandlerFactory> ioHandlerFactorySupplier;
 
   TransportType(final String name,
-                final ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory,
-                final ChannelFactory<? extends SocketChannel> socketChannelFactory,
-                final ChannelFactory<? extends DatagramChannel> datagramChannelFactory,
-                final Supplier<IoHandlerFactory> ioHandlerFactorySupplier) {
+      final ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory,
+      final ChannelFactory<? extends SocketChannel> socketChannelFactory,
+      final ChannelFactory<? extends DatagramChannel> datagramChannelFactory,
+      final Supplier<IoHandlerFactory> ioHandlerFactorySupplier) {
     this.name = name;
     this.serverSocketChannelFactory = serverSocketChannelFactory;
     this.socketChannelFactory = socketChannelFactory;
@@ -99,7 +99,7 @@ public enum TransportType {
    */
   public EventLoopGroup createEventLoopGroup(final Type type) {
     return new MultiThreadIoEventLoopGroup(
-            0, createThreadFactory(this.name, type), this.ioHandlerFactorySupplier.get());
+        0, createThreadFactory(this.name, type), this.ioHandlerFactorySupplier.get());
   }
 
   private static ThreadFactory createThreadFactory(final String name, final Type type) {
@@ -116,7 +116,7 @@ public enum TransportType {
       return NIO;
     }
 
-    if (IoUring.isAvailable()) {
+    if (IoUring.isAvailable() && Boolean.getBoolean("velocity.enable-iouring-transport")) {
       return IO_URING;
     }
 
