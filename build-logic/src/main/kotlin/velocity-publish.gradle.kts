@@ -6,12 +6,11 @@ plugins {
 extensions.configure<PublishingExtension> {
     repositories {
         maven("https://repo.rafi67000.xyz/nononitas/") {
+            name = "nononitas"
             credentials(PasswordCredentials::class.java)
             authentication {
                 create<BasicAuthentication>("basic")
             }
-
-            name = "nononitas"
         }
     }
     publications {
