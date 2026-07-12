@@ -33,5 +33,6 @@ tasks.withType<Jar> {
             }
         attributes["Implementation-Version"] = velocityHumanVersion
         attributes["Enable-Native-Access"] = "ALL-UNNAMED"
+        attributes["Enable-Final-Field-Mutation"] = "ALL-UNNAMED"
     }
 }
